@@ -1,20 +1,80 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+model User {
+  id              String         @id @default(cuid())
+  email           String         @unique
+  handle          String         @unique
+  hashedPassword  String
+  name            String?
+  avatarUrl       String?
+  emailVerified   DateTime?
+  createdAt       DateTime       @default(now())
+  lastSeen        DateTime       @updatedAt
+  sentMessages    Message[]      @relation("SentMessages")
+  conversations   Participant[]
+  refreshTokens   RefreshToken[]
+  reactions       Reaction[]
 }
 
+model Conversation {
+  id           String        @id @default(cuid())
+  isGroup      Boolean       @default(false)
+  title        String?
+  createdAt    DateTime      @default(now())
+  participants Participant[]
+  messages     Message[]
+}
 
-
+model Participant {
+  id             String       @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  role           String       @default("MEMBER")
+  joinedAt       DateTime     @default(now())
+}
 
 model Message {
-  id        Int   @id @default(autoincrement())
-  title     String
-  body      String
+  id             String       @id @default(cuid())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId String
+  sender         User         @relation("SentMessages", fields: [senderId], references: [id])
+  senderId       String
+  content        String
+  contentType    String       @default("TEXT")
+  createdAt      DateTime     @default(now())
+  editedAt       DateTime?
+  deletedAt      DateTime?
+  reactions      Reaction[]
+  replyTo        Message?     @relation("Replies", fields: [replyToId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replyToId      String?
+  replies        Message[]    @relation("Replies")
 }
 
+model Reaction {
+  id        String   @id @default(cuid())
+  content   String
+  message   Message  @relation(fields: [messageId], references: [id])
+  messageId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+}
 
+model RefreshToken {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tokenHash String   @unique
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
