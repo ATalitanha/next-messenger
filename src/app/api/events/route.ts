@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuth } from '@clerk/nextjs/server';
 
-export const revalidate = 0;
-
 export async function GET(req: NextRequest) {
   const { userId } = getAuth(req);
   if (!userId) {

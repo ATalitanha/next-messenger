@@ -9,10 +9,13 @@ export default defineConfig({
     globals: true,
     exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
     setupFiles: ['./vitest.setup.ts'],
+    deps: {
+      inline: [/lucide-react/],
+    },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, 'src'),
     },
   },
 });
